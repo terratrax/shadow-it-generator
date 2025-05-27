@@ -1,0 +1,43 @@
+service:
+  name: Helpjuice
+  category: support
+  status: unsanctioned
+  risk_level: medium
+network:
+  domains:
+  - helpjuice.com
+  - api.helpjuice.com
+  - app.helpjuice.com
+  - cdn.helpjuice.com
+  - static.helpjuice.com
+  ip_ranges:
+  - 52.140.0.0/16
+  - 104.175.0.0/16
+traffic_patterns:
+  web_paths:
+  - /chat
+  - /dashboard
+  - /knowledge
+  - /help
+  - /login
+  - /api/v1
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.25
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.31
+  dlp_triggers:
+  - pattern: SSN|[0-9]{3}-[0-9]{2}-[0-9]{4}
+    action: block
+    rate: 0.01

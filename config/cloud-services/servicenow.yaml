@@ -1,0 +1,39 @@
+service:
+  name: ServiceNow
+  category: support
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - servicenow.com
+  - '*.servicenow.com'
+  - api.servicenow.com
+  - app.servicenow.com
+  - cdn.servicenow.com
+  - static.servicenow.com
+  ip_ranges:
+  - 52.218.0.0/16
+traffic_patterns:
+  web_paths:
+  - /tickets
+  - /
+  - /help
+  - /api/v1
+  - /community
+  - /api/v2
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.63
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.001

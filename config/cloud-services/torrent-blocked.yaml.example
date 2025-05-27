@@ -1,0 +1,99 @@
+# BitTorrent - Blocked P2P Service Example
+# This represents a completely blocked service that generates denied traffic logs
+
+service:
+  name: "BitTorrent"
+  category: "p2p_filesharing"
+  status: "blocked"  # All traffic will be denied
+  risk_level: "high"
+  
+# Network identifiers for this service
+network:
+  domains:
+    - "*.torrent"
+    - "thepiratebay.org"
+    - "*.thepiratebay.org"
+    - "1337x.to"
+    - "rarbg.to"
+    - "torrentz2.eu"
+  ip_ranges:
+    - "104.28.0.0/16"  # Common CDN ranges used by torrent sites
+    - "172.67.0.0/16"
+  ports:
+    - 6881-6889  # Common BitTorrent ports
+    - 6969       # Tracker port
+  
+# Traffic patterns for blocked services
+traffic_patterns:
+  # These attempts will all be blocked
+  connection_attempts:
+    - "/announce"
+    - "/scrape"
+    - "*.torrent"
+    - "/download.php"
+  
+  # Protocol signatures
+  protocols:
+    - "BitTorrent"
+    - "uTP"
+  
+  # User agent patterns of torrent clients
+  user_agents:
+    clients:
+      - "uTorrent/3.*"
+      - "BitTorrent/7.*"
+      - "Transmission/3.*"
+      - "qBittorrent/4.*"
+  
+# Activity simulation for blocked services
+activity:
+  # Some users will still attempt to use it
+  user_attempt_rate: 0.05  # 5% of users might try
+  
+  # Attempt patterns
+  attempt_patterns:
+    persistent_users: 0.2  # 20% of attempting users will try repeatedly
+    max_attempts_per_day: 10
+    
+  # Time patterns (users might try outside business hours)
+  attempt_hours:
+    lunch_break:
+      start: 12
+      end: 13
+      weight: 0.3
+    after_hours:
+      start: 17
+      end: 22
+      weight: 0.5
+    late_night:
+      start: 22
+      end: 6
+      weight: 0.2
+      
+# Security events for blocked services
+security_events:
+  # All attempts are blocked
+  block_rate: 1.0  # 100% blocked
+  
+  # Block actions
+  block_actions:
+    - action: "deny"
+      log_level: "warning"
+      message: "P2P/Torrent traffic blocked by policy"
+      
+  # Alert generation
+  alerts:
+    repeated_attempts:
+      threshold: 5  # Alert after 5 attempts
+      window_minutes: 60
+      severity: "medium"
+    
+    high_volume_attempt:
+      threshold_mb: 100
+      severity: "high"
+      
+  # Compliance violations
+  compliance:
+    violation_type: "acceptable_use_policy"
+    report_to_hr: true
+    threshold_attempts: 10

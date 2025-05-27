@@ -1,0 +1,151 @@
+# Slack - Sanctioned Collaboration Service Example
+# This represents an officially approved service with full access
+
+service:
+  name: "Slack"
+  category: "collaboration"
+  status: "sanctioned"  # Officially approved
+  risk_level: "low"
+  
+# Network identifiers for this service
+network:
+  domains:
+    - "slack.com"
+    - "*.slack.com"
+    - "*.slack-edge.com"
+    - "*.slack-msgs.com"
+    - "*.slack-files.com"
+    - "*.slackb.com"
+  ip_ranges:
+    - "54.172.0.0/16"
+    - "52.72.0.0/16"
+  
+# Traffic patterns specific to Slack
+traffic_patterns:
+  # API endpoints
+  api_endpoints:
+    - "/api/auth.test"
+    - "/api/chat.postMessage"
+    - "/api/conversations.list"
+    - "/api/users.list"
+    - "/api/files.upload"
+    - "/api/rtm.connect"
+  
+  # Web UI paths
+  web_paths:
+    - "/messages/*"
+    - "/files/*"
+    - "/archives/*"
+    - "/admin/*"
+    - "/apps/*"
+  
+  # WebSocket connections for real-time
+  websocket_endpoints:
+    - "wss://wss-primary.slack.com/"
+    - "wss://wss-backup.slack.com/"
+  
+  # User agent patterns
+  user_agents:
+    desktop:
+      - "Mozilla/5.0 * Slack/*"
+      - "Slack-Desktop/*"
+    mobile:
+      - "Slack-iOS/*"
+      - "Slack-Android/*"
+    integrations:
+      - "Slackbot 1.0"
+      - "Slack-Webhook/*"
+  
+# Activity simulation parameters
+activity:
+  # High adoption since it's sanctioned
+  user_adoption_rate: 0.85  # 85% of users use it
+  
+  # Usage patterns throughout the day
+  peak_hours:
+    morning_standup:
+      start: 9
+      end: 10
+      multiplier: 2.5
+    working_hours:
+      start: 10
+      end: 17
+      multiplier: 1.5
+    after_hours:
+      start: 17
+      end: 22
+      multiplier: 0.3
+  
+  # Common actions and their weights
+  actions:
+    message_send:
+      weight: 0.5
+      avg_per_hour: 15
+      size_bytes: 150
+    message_read:
+      weight: 0.3
+      avg_per_hour: 50
+    file_upload:
+      weight: 0.05
+      avg_size_mb: 5
+      size_std_dev: 3
+    file_download:
+      weight: 0.05
+      avg_size_mb: 4
+    channel_browse:
+      weight: 0.05
+      avg_duration_seconds: 30
+    search:
+      weight: 0.05
+      avg_queries_per_day: 5
+      
+  # Real-time connection patterns
+  websocket:
+    connection_duration_hours: 8
+    reconnect_interval_minutes: 5
+    heartbeat_interval_seconds: 30
+    
+# Security events for sanctioned services
+security_events:
+  # Very low block rate since it's approved
+  block_rate: 0.001  # 0.1% might be false positives
+  
+  # DLP for sanctioned services
+  dlp_triggers:
+    - pattern: "api_key|API_KEY|secret"
+      action: "alert"
+      rate: 0.001
+      severity: "high"
+    - pattern: "password.*=|pwd.*="
+      action: "alert"
+      rate: 0.0005
+      
+  # Anomaly detection
+  anomalies:
+    bulk_file_download:
+      threshold_files: 50
+      window_minutes: 60
+      action: "alert"
+    unusual_hours_access:
+      hours: "00:00-05:00"
+      action: "log"
+    external_sharing:
+      action: "log"
+      rate: 0.02
+      
+# Integration patterns
+integrations:
+  # OAuth flows
+  oauth:
+    authorize_endpoint: "/oauth/authorize"
+    token_endpoint: "/api/oauth.access"
+    
+  # Webhook traffic
+  webhooks:
+    incoming_rate_per_hour: 10
+    outgoing_rate_per_hour: 5
+    
+  # Bot traffic
+  bots:
+    active_bots: 5
+    messages_per_bot_per_hour: 20

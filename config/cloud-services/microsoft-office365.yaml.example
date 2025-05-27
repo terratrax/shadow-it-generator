@@ -1,0 +1,97 @@
+# Microsoft Office 365 - Sanctioned Enterprise Application
+# This is an example of a sanctioned cloud service configuration
+
+service:
+  name: "Microsoft Office 365"
+  hostname: "outlook.office365.com"
+  category: "Business"          # Will be used in urlCategories field
+  risk_level: "low"             # low, medium, high
+  sanctioned: true              # Sanctioned by IT department
+  
+traffic:
+  # Average data transfer per user session
+  avg_bytes_per_session: 2097152     # 2MB average
+  bytes_std_deviation: 1048576       # 1MB standard deviation
+  
+  # Average number of HTTP requests per session
+  avg_requests_per_session: 75
+  requests_std_deviation: 25
+  
+  # Session duration in minutes
+  avg_session_duration: 45
+  session_duration_std_dev: 15
+  
+access:
+  allowed: true                      # This service is allowed
+  block_reason: ""                   # Empty for allowed services
+  block_reason_code: 0               # 0 for allowed
+  
+# Define common endpoints and their usage patterns
+endpoints:
+  - path: "/owa/"
+    method: "GET"
+    weight: 0.25                     # 25% of requests
+    is_api: false
+    avg_response_bytes: 524288       # 512KB
+    
+  - path: "/api/v2.0/me/messages"
+    method: "GET"
+    weight: 0.20
+    is_api: true
+    avg_response_bytes: 131072       # 128KB
+    
+  - path: "/api/v2.0/me/messages"
+    method: "POST"
+    weight: 0.10
+    is_api: true
+    avg_response_bytes: 4096         # 4KB
+    avg_request_bytes: 32768         # 32KB
+    
+  - path: "/api/v2.0/me/calendar/events"
+    method: "GET"
+    weight: 0.15
+    is_api: true
+    avg_response_bytes: 65536        # 64KB
+    
+  - path: "/api/v2.0/me/drive/root/children"
+    method: "GET"
+    weight: 0.10
+    is_api: true
+    avg_response_bytes: 262144       # 256KB
+    
+  - path: "/api/v2.0/me/contacts"
+    method: "GET"
+    weight: 0.05
+    is_api: true
+    avg_response_bytes: 32768        # 32KB
+    
+  - path: "/api/v2.0/me/photo/$value"
+    method: "GET"
+    weight: 0.05
+    is_api: true
+    avg_response_bytes: 16384        # 16KB
+    
+  - path: "/owa/service.svc"
+    method: "POST"
+    weight: 0.10
+    is_api: false
+    avg_response_bytes: 8192         # 8KB
+    avg_request_bytes: 4096          # 4KB
+
+# Additional hostnames this service might use
+additional_hosts:
+  - "login.microsoftonline.com"
+  - "graph.microsoft.com"
+  - "outlook.office.com"
+  - "*.sharepoint.com"
+  - "*.onedrive.com"
+
+# HTTP status code distribution
+http_status_distribution:
+  200: 0.85    # 85% success
+  204: 0.05    # 5% no content
+  301: 0.02    # 2% redirects
+  302: 0.03    # 3% redirects
+  401: 0.02    # 2% unauthorized (re-auth needed)
+  404: 0.02    # 2% not found
+  500: 0.01    # 1% server errors

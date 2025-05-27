@@ -1,0 +1,42 @@
+service:
+  name: Microsoft Dynamics 365
+  category: crm
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - microsoft-dynamics-365.com
+  - '*.microsoft-dynamics-365.com'
+  - api.microsoft-dynamics-365.com
+  - app.microsoft-dynamics-365.com
+  ip_ranges:
+  - 172.26.0.0/16
+traffic_patterns:
+  web_paths:
+  - /contacts
+  - /dashboard
+  - /
+  - /pipeline
+  - /reports
+  - /api/v2
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+  api_endpoints:
+  - /api/v1/auth
+  - /api/v1/users
+  - /api/v1/data
+  - /api/v1/crm
+activity:
+  user_adoption_rate: 0.88
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.001

@@ -1,0 +1,49 @@
+service:
+  name: Google Drive
+  category: cloud_storage
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - google-drive.com
+  - cdn.google-drive.com
+  - static.google-drive.com
+  - files.google-drive.com
+  - download.google-drive.com
+  ip_ranges:
+  - 172.22.0.0/16
+traffic_patterns:
+  web_paths:
+  - /
+  - /sync
+  - /login
+  - /api/v1
+  - /share
+  - /upload
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.61
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+    file_upload:
+      weight: 0.2
+      avg_size_mb: 10
+      size_std_dev: 5
+    file_download:
+      weight: 0.2
+      avg_size_mb: 8
+      size_std_dev: 4
+    folder_browse:
+      weight: 0.1
+      avg_duration_seconds: 20
+security_events:
+  block_rate: 0.001

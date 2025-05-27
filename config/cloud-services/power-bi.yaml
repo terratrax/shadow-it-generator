@@ -1,0 +1,43 @@
+service:
+  name: Power BI
+  category: analytics
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - power-bi.com
+  - cdn.power-bi.com
+  - static.power-bi.com
+  ip_ranges:
+  - 185.225.0.0/16
+  - 13.71.0.0/16
+  - 52.152.0.0/16
+traffic_patterns:
+  web_paths:
+  - /data
+  - /
+  - /api/v1
+  - /insights
+  - /metrics
+  - /api/v2
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+  api_endpoints:
+  - /api/v1/auth
+  - /api/v1/users
+  - /api/v1/data
+  - /api/v1/analytics
+activity:
+  user_adoption_rate: 0.86
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.001

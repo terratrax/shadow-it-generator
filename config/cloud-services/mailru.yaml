@@ -1,0 +1,62 @@
+service:
+  name: Mail.ru
+  category: email
+  status: blocked
+  risk_level: high
+network:
+  domains:
+  - mailru.com
+  - api.mailru.com
+  - app.mailru.com
+  - cdn.mailru.com
+  - static.mailru.com
+  - mail.mailru.com
+  - smtp.mailru.com
+  - imap.mailru.com
+  ip_ranges:
+  - 151.4.0.0/16
+  - 104.137.0.0/16
+traffic_patterns:
+  web_paths:
+  - /login
+  - /api/v1
+  - /mail
+  - /api/v2
+  - /inbox
+  - /folders
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile:
+    - Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15
+    - Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36
+activity:
+  user_adoption_rate: 0.06
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+    email_send:
+      weight: 0.2
+      avg_per_hour: 5
+      size_bytes: 5000
+    email_read:
+      weight: 0.3
+      avg_per_hour: 20
+    attachment_download:
+      weight: 0.1
+      avg_size_mb: 2
+  attempt_patterns:
+    persistent_users: 0.2
+    max_attempts_per_day: 5
+security_events:
+  block_rate: 1.0
+  alerts:
+    repeated_attempts:
+      threshold: 3
+      window_minutes: 60
+      severity: high

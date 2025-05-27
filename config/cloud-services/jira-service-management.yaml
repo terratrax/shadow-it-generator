@@ -1,0 +1,37 @@
+service:
+  name: Jira Service Management
+  category: support
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - jira-service-management.com
+  - cdn.jira-service-management.com
+  - static.jira-service-management.com
+  ip_ranges:
+  - 151.239.0.0/16
+  - 54.95.0.0/16
+traffic_patterns:
+  web_paths:
+  - /dashboard
+  - /knowledge
+  - /tickets
+  - /
+  - /login
+  - /community
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.8
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.001

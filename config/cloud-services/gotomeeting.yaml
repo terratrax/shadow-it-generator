@@ -1,0 +1,52 @@
+service:
+  name: GoToMeeting
+  category: collaboration
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - gotomeeting.com
+  - '*.gotomeeting.com'
+  - api.gotomeeting.com
+  - app.gotomeeting.com
+  - meet.gotomeeting.com
+  - chat.gotomeeting.com
+  - gotomeeting.io
+  ip_ranges:
+  - 192.77.0.0/16
+  - 13.96.0.0/16
+  - 52.149.0.0/16
+traffic_patterns:
+  web_paths:
+  - /dashboard
+  - /
+  - /channels
+  - /login
+  - /teams
+  - /workspace
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.64
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+    message_send:
+      weight: 0.3
+      avg_per_hour: 20
+      size_bytes: 200
+    message_read:
+      weight: 0.2
+      avg_per_hour: 50
+    file_share:
+      weight: 0.05
+      avg_size_mb: 5
+security_events:
+  block_rate: 0.001

@@ -1,0 +1,37 @@
+service:
+  name: Coursera
+  category: education
+  status: unsanctioned
+  risk_level: low
+network:
+  domains:
+  - coursera.com
+  - api.coursera.com
+  - app.coursera.com
+  ip_ranges:
+  - 151.39.0.0/16
+  - 52.144.0.0/16
+traffic_patterns:
+  web_paths:
+  - /library
+  - /grades
+  - /
+  - /api/v1
+  - /api/v2
+  - /lessons
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.15
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.13

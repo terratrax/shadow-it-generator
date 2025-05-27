@@ -1,0 +1,39 @@
+service:
+  name: ADP
+  category: hr
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - adp.com
+  - '*.adp.com'
+  - api.adp.com
+  - app.adp.com
+  - adp.io
+  ip_ranges:
+  - 13.121.0.0/16
+  - 52.16.0.0/16
+traffic_patterns:
+  web_paths:
+  - /employees
+  - /timeoff
+  - /recruiting
+  - /login
+  - /api/v1
+  - /api/v2
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.61
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.001

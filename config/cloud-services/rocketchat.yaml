@@ -1,0 +1,52 @@
+service:
+  name: Rocket.Chat
+  category: collaboration
+  status: unsanctioned
+  risk_level: medium
+network:
+  domains:
+  - rocketchat.com
+  - '*.rocketchat.com'
+  - meet.rocketchat.com
+  - chat.rocketchat.com
+  ip_ranges:
+  - 52.98.0.0/16
+  - 151.174.0.0/16
+traffic_patterns:
+  web_paths:
+  - /
+  - /channels
+  - /login
+  - /meet
+  - /api/v2
+  - /teams
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.25
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+    message_send:
+      weight: 0.3
+      avg_per_hour: 20
+      size_bytes: 200
+    message_read:
+      weight: 0.2
+      avg_per_hour: 50
+    file_share:
+      weight: 0.05
+      avg_size_mb: 5
+security_events:
+  block_rate: 0.21
+  dlp_triggers:
+  - pattern: SSN|[0-9]{3}-[0-9]{2}-[0-9]{4}
+    action: block
+    rate: 0.01

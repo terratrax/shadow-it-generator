@@ -1,0 +1,33 @@
+service:
+  name: Reuters
+  category: news
+  status: unsanctioned
+  risk_level: low
+network:
+  domains:
+  - reuters.com
+  ip_ranges:
+  - 151.204.0.0/16
+  - 13.43.0.0/16
+  - 13.57.0.0/16
+traffic_patterns:
+  web_paths:
+  - /api/v1
+  - /login
+  - /
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.12
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.24

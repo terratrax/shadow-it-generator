@@ -1,0 +1,45 @@
+service:
+  name: Upload.ee
+  category: file_transfer
+  status: blocked
+  risk_level: high
+network:
+  domains:
+  - uploadee.com
+  - '*.uploadee.com'
+  - files.uploadee.com
+  - download.uploadee.com
+  ip_ranges:
+  - 172.54.0.0/16
+traffic_patterns:
+  web_paths:
+  - /send
+  - /login
+  - /api/v1
+  - /api/v2
+  - /receive
+  - /download
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.03
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+  attempt_patterns:
+    persistent_users: 0.2
+    max_attempts_per_day: 5
+security_events:
+  block_rate: 1.0
+  alerts:
+    repeated_attempts:
+      threshold: 3
+      window_minutes: 60
+      severity: high

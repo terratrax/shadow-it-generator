@@ -1,0 +1,38 @@
+service:
+  name: Grammarly
+  category: ai_ml
+  status: unsanctioned
+  risk_level: low
+network:
+  domains:
+  - grammarly.com
+  - '*.grammarly.com'
+  - api.grammarly.com
+  - app.grammarly.com
+  ip_ranges:
+  - 13.6.0.0/16
+  - 54.169.0.0/16
+traffic_patterns:
+  web_paths:
+  - /dashboard
+  - /
+  - /models
+  - /login
+  - /inference
+  - /analyze
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.13
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.14

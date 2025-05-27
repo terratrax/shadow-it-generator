@@ -1,0 +1,37 @@
+service:
+  name: Auth0
+  category: security
+  status: sanctioned
+  risk_level: low
+network:
+  domains:
+  - auth0.com
+  - '*.auth0.com'
+  ip_ranges:
+  - 192.254.0.0/16
+  - 13.129.0.0/16
+  - 13.191.0.0/16
+traffic_patterns:
+  web_paths:
+  - /passwords
+  - /dashboard
+  - /policies
+  - /login
+  - /api/v1
+  - /keys
+  user_agents:
+    desktop:
+    - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+    - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+    mobile: []
+activity:
+  user_adoption_rate: 0.81
+  actions:
+    page_view:
+      weight: 0.3
+      avg_duration_seconds: 30
+    api_call:
+      weight: 0.2
+      avg_per_hour: 10
+security_events:
+  block_rate: 0.001

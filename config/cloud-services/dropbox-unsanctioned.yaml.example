@@ -1,0 +1,93 @@
+# Dropbox - Unsanctioned Cloud Storage Service Example
+# This represents an unsanctioned service that some users use but isn't officially approved
+
+service:
+  name: "Dropbox"
+  category: "cloud_storage"
+  status: "unsanctioned"  # Can be: sanctioned, unsanctioned, blocked
+  risk_level: "medium"
+  
+# Network identifiers for this service
+network:
+  domains:
+    - "dropbox.com"
+    - "*.dropbox.com"
+    - "*.dropboxapi.com"
+    - "*.dropboxusercontent.com"
+  ip_ranges:
+    - "162.125.0.0/16"
+    - "185.45.5.0/24"
+  
+# Traffic patterns specific to this service
+traffic_patterns:
+  # API endpoints commonly accessed
+  api_endpoints:
+    - "/2/files/upload"
+    - "/2/files/download"
+    - "/2/files/list_folder"
+    - "/2/files/get_metadata"
+    - "/2/sharing/create_shared_link"
+  
+  # Web UI paths
+  web_paths:
+    - "/home"
+    - "/login"
+    - "/upload"
+    - "/share"
+    - "/browse"
+  
+  # User agent patterns
+  user_agents:
+    desktop:
+      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+    mobile:
+      - "Dropbox iOS Client"
+      - "DropboxAndroid"
+  
+# Activity simulation parameters
+activity:
+  # Since it's unsanctioned, only some users will use it
+  user_adoption_rate: 0.15  # 15% of users might use it
+  
+  # Daily usage patterns
+  peak_hours:
+    start: 9
+    end: 17
+  
+  # Common actions and their weights
+  actions:
+    file_upload:
+      weight: 0.3
+      avg_size_mb: 25
+      size_std_dev: 15
+    file_download:
+      weight: 0.4
+      avg_size_mb: 20
+      size_std_dev: 10
+    folder_browse:
+      weight: 0.2
+      avg_duration_seconds: 45
+    share_link:
+      weight: 0.1
+      
+# Security events specific to unsanctioned services
+security_events:
+  # Higher rate of blocks since it's unsanctioned
+  block_rate: 0.3  # 30% of attempts might be blocked
+  
+  # Data loss prevention triggers
+  dlp_triggers:
+    - pattern: "SSN|[0-9]{3}-[0-9]{2}-[0-9]{4}"
+      action: "block"
+      rate: 0.02
+    - pattern: "CONFIDENTIAL|SECRET"
+      action: "alert"
+      rate: 0.05
+      
+  # Shadow IT detection
+  detection_events:
+    first_time_user_alert: true
+    bulk_upload_alert:
+      threshold_mb: 100
+      action: "alert"
