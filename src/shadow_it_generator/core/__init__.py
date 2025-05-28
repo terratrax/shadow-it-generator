@@ -6,14 +6,11 @@ realistic shadow IT network traffic logs.
 """
 
 from .engine import LogGenerationEngine
-from .user import User, UserProfile
+from .user import User
 from .session import Session
-from .traffic import TrafficGenerator
 
 __all__ = [
     "LogGenerationEngine",
     "User",
-    "UserProfile",
     "Session",
-    "TrafficGenerator",
 ]

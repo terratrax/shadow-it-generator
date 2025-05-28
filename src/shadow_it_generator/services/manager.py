@@ -38,14 +38,15 @@ class ServiceManager:
         # Group by category
         self.by_category: Dict[str, List[CloudService]] = {}
         for service in self.services:
-            category = service.service.category
+            category = service.category
             if category not in self.by_category:
                 self.by_category[category] = []
             self.by_category[category].append(service)
         
         # Group by access status
-        self.sanctioned = [s for s in self.services if s.access.allowed]
-        self.blocked = [s for s in self.services if not s.access.allowed]
+        # Group by status (sanctioned vs unsanctioned)
+        self.sanctioned = [s for s in self.services if s.status == 'sanctioned']
+        self.blocked = [s for s in self.services if s.status != 'sanctioned']
         
         # Create risk categories
         self.low_risk = []
@@ -70,12 +71,12 @@ class ServiceManager:
         Returns:
             Risk level: 'low', 'medium', or 'high'
         """
-        # Blocked services are automatically high risk
-        if not service.access.allowed:
+        # Unsanctioned services are automatically high risk
+        if service.status != 'sanctioned':
             return 'high'
         
         # Categorize based on service category
-        category = service.service.category.lower()
+        category = service.category.lower()
         
         high_risk_categories = [
             'file sharing', 'personal storage', 'social media',
@@ -176,7 +177,7 @@ class ServiceManager:
         popular = []
         for name in popular_names:
             for service in self.services:
-                if service.service.name == name:
+                if service.name == name:
                     popular.append(service)
                     break
         

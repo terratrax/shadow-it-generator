@@ -32,7 +32,8 @@ class TrafficGenerator:
         """
         self.config = enterprise_config
         self.working_hours = self._parse_working_hours()
-        self.peak_hours = enterprise_config.activity_patterns.peak_hours
+        # Get peak hours from traffic config
+        self.peak_hours = enterprise_config.traffic.get('peak_hours', [9, 10, 11, 14, 15, 16])
     
     def get_active_users(self,
                         hour: datetime,
@@ -79,7 +80,7 @@ class TrafficGenerator:
         
         # Weekend activity reduction
         if day_of_week >= 5:  # Saturday or Sunday
-            base_factor = self.config.activity_patterns.weekend_activity
+            base_factor = self.config.traffic.get('weekend_activity', 0.1)
         else:
             base_factor = 1.0
         
@@ -88,7 +89,7 @@ class TrafficGenerator:
             # Working hours activity
             if hour_of_day in self.peak_hours:
                 time_factor = 1.0
-            elif hour_of_day == 12 and self.config.activity_patterns.lunch_dip:
+            elif hour_of_day == 12 and self.config.traffic.get('lunch_dip', True):
                 time_factor = 0.7  # 30% reduction during lunch
             else:
                 time_factor = 0.8
@@ -116,9 +117,10 @@ class TrafficGenerator:
         Returns:
             Tuple of (start_hour, end_hour)
         """
-        behavior = self.config.user_behavior
-        start = datetime.strptime(behavior.working_hours.start, "%H:%M").hour
-        end = datetime.strptime(behavior.working_hours.end, "%H:%M").hour
+        # Get working hours from config
+        working_hours = self.config.traffic.get('working_hours', {'start': '08:00', 'end': '18:00'})
+        start = datetime.strptime(working_hours.get('start', '08:00'), "%H:%M").hour
+        end = datetime.strptime(working_hours.get('end', '18:00'), "%H:%M").hour
         return start, end
     
     def _select_active_users(self,

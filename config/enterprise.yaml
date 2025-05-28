@@ -1,0 +1,115 @@
+# Enterprise Configuration for Shadow IT Log Generator
+# Copy this file to enterprise.yaml and customize for your organization
+
+enterprise:
+  name: "Acme Corporation"
+  total_users: 5000
+  domain: "acme.com"
+  
+network:
+  # Source IP ranges for user traffic
+  source_ips:
+    - "10.10.0.0/16"      # Main office
+    - "192.168.0.0/16"    # Branch offices
+    - "172.16.0.0/12"     # VPN users
+  
+  # Optional: Proxy server IP if traffic goes through proxy
+  proxy_ip: "10.10.1.100"
+  
+user_behavior:
+  # Business hours configuration
+  working_hours:
+    start: "08:00"
+    end: "18:00"
+    timezone: "America/New_York"
+  
+  # User profile distribution
+  user_profiles:
+    normal_users:
+      percentage: 70                # 70% of users
+      avg_services_per_day: 10      # Average cloud services accessed daily
+      service_variance: 3           # Standard deviation
+    
+    power_users:
+      percentage: 20                # 20% of users
+      avg_services_per_day: 25
+      service_variance: 5
+    
+    risky_users:
+      percentage: 10                # 10% of users
+      avg_services_per_day: 30
+      service_variance: 10
+      risky_app_preference: 0.4     # 40% chance to use risky/unsanctioned apps
+  
+  # Activity pattern configuration
+  activity_patterns:
+    peak_hours: [9, 10, 11, 14, 15, 16]  # Hours with highest activity
+    lunch_dip: true                       # Reduce activity during lunch
+    lunch_hour: 12                        # Lunch hour (local time)
+    weekend_activity: 0.1                 # 10% of weekday activity on weekends
+  
+# Browser/User Agent configuration
+browsers:
+  - user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36"
+    weight: 0.45
+  
+  - user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+    weight: 0.25
+  
+  - user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+    weight: 0.15
+  
+  - user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+    weight: 0.15
+
+# Output configuration
+output:
+  # Format with placeholders: {year}, {month}, {day}, {hour}, {timestamp}
+  format: "logs/{year}/{month}/{day}/webgateway_{year}{month}{day}_{hour}0000.log"
+  rotation: "hourly"        # Options: hourly, daily
+  compression: true         # Gzip compress rotated files
+  max_file_size: "100MB"    # Rotate if file exceeds this size
+  
+# Security policies
+policies:
+  - name: "Default Policy"
+    id: "POL001"
+    description: "Standard corporate web access policy"
+  
+  - name: "Restricted Access"
+    id: "POL002"
+    description: "Policy for blocking unsanctioned applications"
+  
+  - name: "High Risk Block"
+    id: "POL003"
+    description: "Policy for blocking high-risk applications"
+
+# Junk traffic configuration - adds noise from general internet sites
+junk_traffic:
+  enabled: true
+  percentage_of_total: 0.30  # 30% of all traffic will be to junk/random sites
+  
+  # Traffic volume settings for junk sites
+  requests_per_user_per_day:
+    mean: 150
+    std_dev: 75
+  
+  # Categories of junk sites with their traffic share
+  # (allowed/blocked rates are defined in junk_sites.json per category)
+  categories:
+    news: 0.25             # News sites (95% allowed)
+    reference: 0.20        # Wikipedia, etc. (98% allowed)
+    shopping: 0.15         # E-commerce sites (90% allowed)
+    blogs: 0.15            # Personal blogs (85% allowed)
+    forums: 0.10           # Reddit alternatives (70% allowed)
+    misc: 0.15             # Weather, sports (88% allowed)
+
+# Log format configuration
+logging:
+  format: "leef"           # Options: leef, cef
+  syslog_priority: 30      # Syslog priority value
+  facility: "daemon"       # Syslog facility
+  hostname: "WebGatewayHost"
+  vendor: "McAfee"
+  product: "Web Gateway"
+  version: "8.2.9"

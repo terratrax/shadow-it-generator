@@ -1,356 +1,311 @@
-"""Session generation and management.
+"""
+User session management for cloud services.
 
-This module handles the creation of user sessions, including timing,
-duration, and request patterns within sessions.
+This module handles session creation, duration, and request patterns
+within sessions.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Optional, Dict, Any
 import random
 import numpy as np
-import logging
 
-from .user import User, UserType
-from ..config.models import CloudService, EnterpriseConfig
-
-
-logger = logging.getLogger(__name__)
+from ..config.models import CloudService
+from ..formatters.base import LogEvent
+from .user import User
 
 
 @dataclass
 class Session:
-    """Represents a user session with a cloud service.
-    
-    Attributes:
-        session_id: Unique session identifier
-        user: User associated with the session
-        service: Cloud service being accessed
-        start_time: Session start timestamp
-        end_time: Session end timestamp
-        request_count: Number of requests in the session
-        total_bytes_in: Total bytes sent
-        total_bytes_out: Total bytes received
     """
-    session_id: str
+    Represents a user session with a cloud service.
+    
+    A session is a period of continuous interaction with a service,
+    containing multiple requests.
+    """
+    id: str
     user: User
     service: CloudService
     start_time: datetime
-    end_time: datetime
-    request_count: int
-    total_bytes_in: int
-    total_bytes_out: int
-
-
-@dataclass
-class Request:
-    """Represents a single HTTP request within a session.
+    end_time: Optional[datetime] = None
     
-    Attributes:
-        timestamp: Request timestamp
-        method: HTTP method
-        url: Full URL
-        path: URL path
-        status_code: HTTP response code
-        bytes_in: Request size
-        bytes_out: Response size
-        response_time: Response time in milliseconds
-    """
-    timestamp: datetime
-    method: str
-    url: str
-    path: str
-    status_code: int
-    bytes_in: int
-    bytes_out: int
-    response_time: int
-
-
-class SessionGenerator:
-    """Generates realistic user sessions with cloud services.
+    # Session characteristics
+    is_mobile: bool = False
+    user_agent: str = ""
+    source_ip: str = ""
     
-    This class creates sessions with appropriate timing, duration,
-    and request patterns based on user profiles and service characteristics.
-    """
+    # Request tracking
+    request_count: int = 0
+    total_bytes_sent: int = 0
+    total_bytes_received: int = 0
     
-    def __init__(self, enterprise_config: EnterpriseConfig):
-        """Initialize the session generator.
-        
-        Args:
-            enterprise_config: Enterprise-wide configuration
+    # Session state
+    is_authenticated: bool = False
+    is_active: bool = True
+    was_blocked: bool = False
+    
+    def __post_init__(self):
+        """Initialize session duration based on service and user profile."""
+        if self.end_time is None:
+            # Generate session duration
+            duration = self._generate_duration()
+            self.end_time = self.start_time + duration
+    
+    def _generate_duration(self) -> timedelta:
         """
-        self.config = enterprise_config
-        self._session_counter = 0
-    
-    def generate_user_sessions(self,
-                             user: User,
-                             services: List[CloudService],
-                             hour_start: datetime) -> List[Session]:
-        """Generate sessions for a user within a specific hour.
+        Generate realistic session duration based on service type and user profile.
         
-        Args:
-            user: User to generate sessions for
-            services: Available cloud services
-            hour_start: Start of the hour
-            
         Returns:
-            List of generated sessions
+            Session duration as timedelta
         """
-        sessions = []
+        # Base duration depends on service category
+        category_durations = {
+            'collaboration': (20, 60),  # 20-60 minutes
+            'cloud_storage': (5, 30),   # 5-30 minutes
+            'productivity': (15, 90),   # 15-90 minutes
+            'development': (30, 120),   # 30-120 minutes
+            'email': (10, 45),          # 10-45 minutes
+            'crm': (20, 60),           # 20-60 minutes
+            'analytics': (15, 60),      # 15-60 minutes
+            'ai_ml': (10, 45),         # 10-45 minutes
+            'default': (10, 40)         # Default duration
+        }
         
-        # Determine number of services to access based on user type
-        service_count = self._get_service_count(user)
-        
-        # Select services based on user preferences and type
-        selected_services = self._select_services(user, services, service_count)
-        
-        # Generate sessions for each selected service
-        for service in selected_services:
-            session = self._create_session(user, service, hour_start)
-            if session:
-                sessions.append(session)
-        
-        return sessions
-    
-    def generate_session_requests(self, session: Session) -> List[Request]:
-        """Generate individual requests within a session.
-        
-        Args:
-            session: Session to generate requests for
-            
-        Returns:
-            List of generated requests
-        """
-        requests = []
-        service = session.service
-        
-        # Generate requests based on service traffic patterns
-        request_times = self._generate_request_times(
-            session.start_time,
-            session.end_time,
-            session.request_count
+        min_duration, max_duration = category_durations.get(
+            self.service.category,
+            category_durations['default']
         )
         
-        for timestamp in request_times:
-            # Select endpoint based on weights
-            endpoint = self._select_endpoint(service.endpoints)
-            
-            # Generate request details
-            request = self._create_request(
-                timestamp=timestamp,
-                endpoint=endpoint,
-                service=service,
-                user=session.user
+        # Adjust based on user profile
+        if self.user.profile.name == "power_user":
+            # Power users have longer sessions
+            max_duration *= 1.5
+        elif self.user.profile.name == "risky":
+            # Risky users might have shorter, more frequent sessions
+            max_duration *= 0.8
+        
+        # If service is blocked, session is very short
+        if self.service.status == "blocked":
+            min_duration = 0.5
+            max_duration = 2
+        
+        # Generate duration with some randomness
+        duration_minutes = np.random.gamma(2, (max_duration - min_duration) / 4) + min_duration
+        duration_minutes = max(min_duration, min(max_duration, duration_minutes))
+        
+        return timedelta(minutes=duration_minutes)
+    
+    def generate_requests(self) -> List[Dict[str, Any]]:
+        """
+        Generate all requests for this session.
+        
+        Returns:
+            List of request dictionaries with timing and details
+        """
+        requests = []
+        current_time = self.start_time
+        
+        # If blocked service, generate one or a few blocked attempts
+        if self.service.status == "blocked":
+            num_attempts = random.randint(1, 3)
+            for i in range(num_attempts):
+                requests.append(self._generate_blocked_request(current_time))
+                current_time += timedelta(seconds=random.randint(1, 10))
+            self.was_blocked = True
+            return requests
+        
+        # Normal session flow
+        # Start with authentication if needed
+        if random.random() < 0.8:  # 80% of sessions start with auth
+            requests.append(self._generate_auth_request(current_time))
+            current_time += timedelta(seconds=random.randint(1, 5))
+            self.is_authenticated = True
+        
+        # Generate activity requests based on service patterns
+        session_duration = (self.end_time - self.start_time).total_seconds()
+        
+        # Determine request rate based on service activity
+        if hasattr(self.service, 'activity') and self.service.activity.actions:
+            # Calculate total request rate from actions
+            total_rate = sum(
+                action.avg_per_hour 
+                for action in self.service.activity.actions.values() 
+                if hasattr(action, 'avg_per_hour') and action.avg_per_hour
             )
+            if total_rate == 0:
+                total_rate = 30  # Default 30 requests per hour
+        else:
+            total_rate = 30
+        
+        # Convert to requests per minute
+        requests_per_minute = total_rate / 60
+        
+        # Generate requests with exponential inter-arrival times
+        while current_time < self.end_time:
+            # Exponential distribution for realistic spacing
+            interval = np.random.exponential(1 / requests_per_minute)
+            current_time += timedelta(minutes=interval)
             
+            if current_time >= self.end_time:
+                break
+            
+            # Generate request based on service actions
+            request = self._generate_activity_request(current_time)
             requests.append(request)
+            self.request_count += 1
         
         return requests
     
-    def _get_service_count(self, user: User) -> int:
-        """Determine number of services a user will access.
-        
-        Args:
-            user: User to evaluate
-            
-        Returns:
-            Number of services to access
-        """
-        profile = self._get_user_profile(user.user_type)
-        mean = profile.avg_services_per_day / 24  # Services per hour
-        std = profile.service_variance / 24
-        
-        # Use normal distribution with bounds
-        count = int(np.random.normal(mean, std))
-        return max(0, count)
+    def _generate_auth_request(self, timestamp: datetime) -> Dict[str, Any]:
+        """Generate an authentication request."""
+        return {
+            'timestamp': timestamp,
+            'type': 'auth',
+            'path': random.choice(['/login', '/api/auth', '/oauth/authorize', '/saml/sso']),
+            'method': 'POST',
+            'status_code': 200 if not self.was_blocked else 403,
+            'bytes_sent': random.randint(200, 500),
+            'bytes_received': random.randint(1000, 5000),
+            'duration_ms': random.randint(100, 500)
+        }
     
-    def _get_user_profile(self, user_type: UserType):
-        """Get user profile configuration for a user type.
+    def _generate_blocked_request(self, timestamp: datetime) -> Dict[str, Any]:
+        """Generate a blocked request."""
+        paths = ['/'] + (self.service.traffic_patterns.web_paths or ['/'])
         
-        Args:
-            user_type: Type of user
-            
-        Returns:
-            User profile configuration
-        """
-        profiles = self.config.user_profiles
-        
-        if user_type == UserType.NORMAL:
-            return profiles.normal_users
-        elif user_type == UserType.POWER:
-            return profiles.power_users
+        return {
+            'timestamp': timestamp,
+            'type': 'blocked',
+            'path': random.choice(paths),
+            'method': 'GET',
+            'status_code': 403,
+            'bytes_sent': random.randint(100, 300),
+            'bytes_received': random.randint(500, 1500),  # Block page
+            'duration_ms': random.randint(10, 50),
+            'block_reason': self._get_block_reason()
+        }
+    
+    def _generate_activity_request(self, timestamp: datetime) -> Dict[str, Any]:
+        """Generate a normal activity request."""
+        # Select action type based on weights
+        if self.service.activity.actions:
+            actions = list(self.service.activity.actions.items())
+            action_weights = [action[1].weight for action in actions]
+            selected_action = random.choices(actions, weights=action_weights)[0]
+            action_name, action_config = selected_action
         else:
-            return profiles.risky_users
-    
-    def _select_services(self,
-                        user: User,
-                        services: List[CloudService],
-                        count: int) -> List[CloudService]:
-        """Select services for a user to access.
+            action_name = 'page_view'
+            action_config = None
         
-        Args:
-            user: User selecting services
-            services: Available services
-            count: Number of services to select
+        # Determine request characteristics based on action
+        request_details = self._get_request_details(action_name, action_config)
+        
+        # Add common fields
+        request_details.update({
+            'timestamp': timestamp,
+            'type': action_name,
+            'status_code': self._get_status_code(),
+            'duration_ms': self._get_duration_ms(action_name)
+        })
+        
+        # Track bytes
+        self.total_bytes_sent += request_details.get('bytes_sent', 0)
+        self.total_bytes_received += request_details.get('bytes_received', 0)
+        
+        return request_details
+    
+    def _get_request_details(self, action_name: str, action_config: Any) -> Dict[str, Any]:
+        """Get request details based on action type."""
+        details = {}
+        
+        if action_name in ['file_upload', 'file_download']:
+            # File operations
+            if action_config and hasattr(action_config, 'avg_size_mb'):
+                avg_size = action_config.avg_size_mb * 1024 * 1024
+                std_dev = getattr(action_config, 'size_std_dev', 5) * 1024 * 1024
+                size = int(max(1024, np.random.normal(avg_size, std_dev)))
+            else:
+                size = random.randint(1024, 10 * 1024 * 1024)
             
-        Returns:
-            List of selected services
-        """
-        # TODO: Implement intelligent service selection
-        # Consider user preferences, department, and risk profile
-        return random.sample(services, min(count, len(services)))
-    
-    def _create_session(self,
-                       user: User,
-                       service: CloudService,
-                       hour_start: datetime) -> Optional[Session]:
-        """Create a single session.
-        
-        Args:
-            user: User for the session
-            service: Service being accessed
-            hour_start: Start of the hour
+            if action_name == 'file_upload':
+                details['method'] = 'POST'
+                details['path'] = random.choice(['/api/upload', '/files/upload', '/api/v2/files'])
+                details['bytes_sent'] = size
+                details['bytes_received'] = random.randint(200, 1000)
+            else:
+                details['method'] = 'GET'
+                details['path'] = f'/files/{random.randint(1000, 9999)}/download'
+                details['bytes_sent'] = random.randint(200, 500)
+                details['bytes_received'] = size
+                
+        elif action_name in ['message_send', 'email_send']:
+            # Communication actions
+            details['method'] = 'POST'
+            details['path'] = random.choice(['/api/messages', '/api/send', '/api/v2/messages'])
+            size = getattr(action_config, 'size_bytes', 1000) if action_config else 1000
+            details['bytes_sent'] = size + random.randint(-200, 200)
+            details['bytes_received'] = random.randint(200, 500)
             
-        Returns:
-            Created session or None if skipped
-        """
-        # Check if service is blocked for this user
-        if not service.access.allowed and user.user_type != UserType.RISKY:
-            return None  # Normal users don't access blocked services
-        
-        # Generate session timing
-        start_offset = random.randint(0, 3000)  # Within first 50 minutes
-        duration = self._generate_session_duration()
-        
-        start_time = hour_start + timedelta(seconds=start_offset)
-        end_time = start_time + timedelta(seconds=duration)
-        
-        # Generate request count
-        mean_requests = service.traffic.avg_requests_per_session
-        std_requests = service.traffic.requests_std_deviation
-        request_count = max(1, int(np.random.normal(mean_requests, std_requests)))
-        
-        # Generate traffic volume
-        mean_bytes = service.traffic.avg_bytes_per_session
-        std_bytes = service.traffic.bytes_std_deviation
-        total_bytes = max(100, int(np.random.normal(mean_bytes, std_bytes)))
-        
-        # Split bytes between in and out (more out for downloads)
-        bytes_in = int(total_bytes * 0.2)
-        bytes_out = int(total_bytes * 0.8)
-        
-        self._session_counter += 1
-        
-        return Session(
-            session_id=f"SES{self._session_counter:010d}",
-            user=user,
-            service=service,
-            start_time=start_time,
-            end_time=end_time,
-            request_count=request_count,
-            total_bytes_in=bytes_in,
-            total_bytes_out=bytes_out
-        )
-    
-    def _generate_session_duration(self) -> int:
-        """Generate realistic session duration in seconds.
-        
-        Returns:
-            Duration in seconds
-        """
-        # Normal distribution: mean 30 min, std 10 min
-        duration = np.random.normal(1800, 600)
-        return max(60, int(duration))  # At least 1 minute
-    
-    def _generate_request_times(self,
-                               start: datetime,
-                               end: datetime,
-                               count: int) -> List[datetime]:
-        """Generate request timestamps within a session.
-        
-        Args:
-            start: Session start time
-            end: Session end time
-            count: Number of requests
+        elif action_name == 'api_call':
+            # API calls
+            details['method'] = random.choice(['GET', 'POST', 'PUT', 'DELETE'])
+            api_paths = self.service.traffic_patterns.api_endpoints or ['/api/v1/data']
+            details['path'] = random.choice(api_paths)
+            details['bytes_sent'] = random.randint(100, 2000)
+            details['bytes_received'] = random.randint(500, 50000)
             
-        Returns:
-            List of request timestamps
-        """
-        duration = (end - start).total_seconds()
-        
-        # Generate exponentially distributed intervals
-        intervals = np.random.exponential(duration / count, count)
-        
-        # Normalize to fit within duration
-        intervals = intervals * (duration / intervals.sum())
-        
-        # Convert to timestamps
-        timestamps = []
-        current = 0
-        
-        for interval in intervals:
-            current += interval
-            if current < duration:
-                timestamps.append(start + timedelta(seconds=current))
-        
-        return timestamps
-    
-    def _select_endpoint(self, endpoints: List[Any]) -> Any:
-        """Select an endpoint based on configured weights.
-        
-        Args:
-            endpoints: List of available endpoints
-            
-        Returns:
-            Selected endpoint
-        """
-        weights = [e.weight for e in endpoints]
-        return random.choices(endpoints, weights=weights)[0]
-    
-    def _create_request(self,
-                       timestamp: datetime,
-                       endpoint: Any,
-                       service: CloudService,
-                       user: User) -> Request:
-        """Create a single request.
-        
-        Args:
-            timestamp: Request timestamp
-            endpoint: Endpoint being accessed
-            service: Service being accessed
-            user: User making the request
-            
-        Returns:
-            Created request
-        """
-        # Build URL
-        protocol = "https" if service.name != "Legacy HTTP Service" else "http"
-        url = f"{protocol}://{service.hostname}{endpoint.path}"
-        
-        # Determine status code
-        if service.access.allowed:
-            status_code = 200 if random.random() > 0.05 else 404
         else:
-            status_code = 403  # Blocked
+            # Default page view
+            details['method'] = 'GET'
+            paths = self.service.traffic_patterns.web_paths or ['/']
+            details['path'] = random.choice(paths)
+            details['bytes_sent'] = random.randint(200, 800)
+            details['bytes_received'] = random.randint(5000, 100000)
         
-        # Generate request/response sizes
-        if endpoint.method in ['POST', 'PUT']:
-            bytes_in = random.randint(1000, 50000)
-            bytes_out = random.randint(100, 1000)
+        return details
+    
+    def _get_status_code(self) -> int:
+        """Get HTTP status code for request."""
+        # Most requests succeed
+        if random.random() < 0.95:
+            return random.choice([200, 304])  # OK or Not Modified
         else:
-            bytes_in = random.randint(100, 1000)
-            bytes_out = random.randint(1000, 100000)
+            # Occasional errors
+            return random.choice([400, 401, 404, 500, 503])
+    
+    def _get_duration_ms(self, action_name: str) -> int:
+        """Get request duration in milliseconds."""
+        # Different actions have different typical durations
+        if action_name in ['file_upload', 'file_download']:
+            return random.randint(500, 5000)
+        elif action_name == 'api_call':
+            return random.randint(50, 500)
+        else:
+            return random.randint(100, 1000)
+    
+    def _get_block_reason(self) -> str:
+        """Get reason for blocking based on service."""
+        if self.service.risk_level == "high":
+            reasons = [
+                "High Risk Application",
+                "Security Policy Violation",
+                "Unauthorized Application",
+                "Malware Risk"
+            ]
+        elif self.service.category in ["social_media", "entertainment"]:
+            reasons = [
+                "Social Media Blocked",
+                "Entertainment Site Blocked",
+                "Productivity Policy",
+                "Non-Business Use"
+            ]
+        else:
+            reasons = [
+                "Unsanctioned Application",
+                "Policy Violation",
+                "Access Denied",
+                "IT Policy Block"
+            ]
         
-        # Response time (milliseconds)
-        response_time = random.randint(50, 500)
-        
-        return Request(
-            timestamp=timestamp,
-            method=endpoint.method,
-            url=url,
-            path=endpoint.path,
-            status_code=status_code,
-            bytes_in=bytes_in,
-            bytes_out=bytes_out,
-            response_time=response_time
-        )
+        return random.choice(reasons)

@@ -62,15 +62,3 @@ class CloudService:
     def from_dict(cls, data: Dict[str, Any]) -> "CloudService":
         """Create from dictionary."""
         return cls(**data)
-
-
-class UserProfile:
-    """User profile configuration."""
-    
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", "normal")
-        self.percentage = kwargs.get("percentage", 0.1)
-        self.work_hours_adherence = kwargs.get("work_hours_adherence", 0.8)
-        self.shadow_it_likelihood = kwargs.get("shadow_it_likelihood", 0.2)
-        self.data_volume_multiplier = kwargs.get("data_volume_multiplier", 1.0)
-        self.blocked_attempt_rate = kwargs.get("blocked_attempt_rate", 0.1)
